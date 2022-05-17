@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: helloworld
   annotations:
-    kubernetes.digitalocean.com/load-balancer-id: "your-load-balancer-id"
+    kubernetes.digitalocean.com/load-balancer-id: "hello-task"
     service.beta.kubernetes.io/do-loadbalancer-size-unit: "3"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
   labels:
