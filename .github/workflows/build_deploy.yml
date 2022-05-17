@@ -3,7 +3,9 @@ name: Deploy sample app
 on:
   push:
     branches:
+<<<<<<< HEAD
      - main
+
 
 jobs:
 
