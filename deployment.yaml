@@ -14,7 +14,6 @@ spec:
     spec:
       containers:
         - name: hello-task
-          imagePullPolicy: Never
           image: mustafaeid/test:test
           resources:
             limits:
