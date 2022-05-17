@@ -56,6 +56,7 @@ jobs:
 
     - name: Deploy to kubernetes
       run: |
+        kubectl apply -f namespace.yaml
         kubectl apply -f deployment.yaml
 #        kubectl apply -f eks/deployment.yaml
 #        kubectl apply -f eks/service.yaml
