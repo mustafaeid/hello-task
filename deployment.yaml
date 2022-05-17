@@ -11,8 +11,8 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
   type: LoadBalancer
 ---
 apiVersion: apps/v1
@@ -34,6 +34,6 @@ spec:
         - name: helloworld
           image: mustafaeid/test:test
           ports:
-            - containerPort: 8080
+            - containerPort: 80
 
 
