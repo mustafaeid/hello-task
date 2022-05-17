@@ -44,11 +44,14 @@ jobs:
 
 #    - name: Start minikube
 #      uses: medyagh/setup-minikube@master
-    -  uses: azure/k8s-set-context@v2
-       with:
-         method: kubeconfig
-         kubeconfig: ${{ secrets.KUBE_CONFIG }}
-         context: minikube
+    -  name: Create kubeconfig
+       run: |
+         mkdir ${HOME}/.kube
+         echo ${{ secrets.KUBE_CONFIG }} | base64 --decode > ${HOME}/.kube/config
+
+    - name: Use context
+      run: kubectl config use-context minikube
+
 
 #   - uses: azure/k8s-set-context@v2
 #     with:
