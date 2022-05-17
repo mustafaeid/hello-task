@@ -2,7 +2,8 @@ name: Deploy sample app
 
 on:
   push:
-    branches: [ release ]
+    branches:
+     - main
 
 jobs:
 
@@ -49,3 +50,4 @@ jobs:
 #        kubectl apply -f eks/service.yaml
 #        kubectl apply -f eks/issuer.yaml
 #        kubectl apply -f eks/ingress.yaml
+#
