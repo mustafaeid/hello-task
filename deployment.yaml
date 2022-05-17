@@ -1,38 +1,38 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hello-task
-spec:
-  selector:
-    matchLabels:
-      app: hello-task
-  replicas: 4
-  template:
-    metadata:
-      labels:
-        app: hello-task
-    spec:
-      containers:
-        - name: hello-task
-          image: mustafaeid/test:test
-          resources:
-            limits:
-              cpu: 50m
-              memory: 100Mi
-            requests:
-              cpu: 25m
-              memory: 10Mi
-          ports:
-            - containerPort: 8080
----
 apiVersion: v1
 kind: Service
 metadata:
-  name: example
+  name: helloworld
+  labels:
+    app: helloworld
 spec:
-  type: LoadBalancer
-  selector:
-    app: hello
   ports:
-    - port: 8080
-      targetPort: 8080
+    - name: http
+      port: 8000
+      targetPort: 8000
+  selector:
+    app: helloworld
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld
+  labels:
+    app: helloworld
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+        - name: helloworld
+          image: mustafaeid/test:test
+          ports:
+            - containerPort: 8000
+
+

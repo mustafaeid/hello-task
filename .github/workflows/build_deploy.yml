@@ -5,6 +5,8 @@ on:
     branches:
      - main
 
+env:
+  REPO_NAME: mustafaeid/test
 
 jobs:
 
@@ -38,12 +40,17 @@ jobs:
 
     - name: Build, tag, and push image to container registry
       run: |
-        docker build -t php -t mustafaeid/test:test .
-        docker tag php mustafaeid/test:test
-        docker push mustafaeid/test:test
+        docker build -t php -t ${{env.REPO_NAME}}:test .
+        docker tag php ${{env.REPO_NAME}}:test
+        docker push ${{env.REPO_NAME}}:test
 
-    - name: Start minikube
-      uses: medyagh/setup-minikube@master
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Setub kubeconfig
+      run: doctl kubernetes cluster kubeconfig save 6cdeaeb0-1c5c-44a2-b5b4-557985086748
 
 
 
@@ -55,9 +62,4 @@ jobs:
 #        kubectl apply -f eks/issuer.yaml
 #        kubectl apply -f eks/ingress.yaml
 
-    - name: Test service URLs
-      run: |
-        minikube service list
-        minikube service hello --url
-        echo "------------------opening the service------------------"
-        kubectl get services
+
