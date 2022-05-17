@@ -3,7 +3,6 @@ name: Deploy sample app
 on:
   push:
     branches:
-<<<<<<< HEAD
      - main
 
 
@@ -39,7 +38,7 @@ jobs:
 
     - name: Build, tag, and push image to container registry
       run: |
-        docker build -t php-image:test apache:test .
+        docker build -t php-image:test .
         docker push apache:test
 
 #    - name: Update kube config
