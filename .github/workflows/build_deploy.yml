@@ -60,3 +60,4 @@ jobs:
         minikube service list
         minikube service hello --url
         echo "------------------opening the service------------------"
+        kubectl get services
