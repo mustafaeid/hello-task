@@ -38,7 +38,7 @@ jobs:
 
     - name: Build, tag, and push image to container registry
       run: |
-        docker build -t mustafaeid/test:test .
+        docker build -t php -t mustafaeid/test:test .
         docker tag php mustafaeid/test:test
         docker push mustafaeid/test:test
 
