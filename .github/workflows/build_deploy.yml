@@ -42,15 +42,10 @@ jobs:
         docker tag php mustafaeid/test:test
         docker push mustafaeid/test:test
 
-#    - name: Start minikube
-#      uses: medyagh/setup-minikube@master
-    -  name: Create kubeconfig
-       run: |
-         mkdir ${HOME}/.kube
-         echo ${{ secrets.KUBE_CONFIG }} > ${HOME}/.kube/config
+    - name: Start minikube
+      uses: medyagh/setup-minikube@master
 
-    - name: Use context
-      run: kubectl config use-context minikube
+
 
 
 #   - uses: azure/k8s-set-context@v2
@@ -67,8 +62,10 @@ jobs:
 #        kubectl apply -f eks/issuer.yaml
 #        kubectl apply -f eks/ingress.yaml
 
-#    - name: Test service URLs
-#      run: |
-#        minikube service list
-#        minikube service hello --url
-#        echo "------------------opening the service------------------"
+    - name: Test service URLs
+      run: |
+        minikube service list
+        minikube service hello --url
+        echo "------------------opening the service------------------"
+        kubectl get services
+        minikube service hello
