@@ -57,7 +57,7 @@ jobs:
 
     - name: Deploy to kubernetes
       run: |
-       envsubst < kubectl apply -f deployment.yaml
+        envsubst < <(cat *.yaml) | kubectl apply -f -
 #        kubectl apply -f eks/deployment.yaml
 #        kubectl apply -f eks/service.yaml
 #        kubectl apply -f eks/issuer.yaml
