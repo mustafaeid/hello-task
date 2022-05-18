@@ -40,9 +40,9 @@ jobs:
 
     - name: Build, tag, and push image to container registry
       run: |
-        docker build -t php -t ${{env.REPO_NAME}}:test .
-        docker tag php ${{env.REPO_NAME}}:test
-        docker push ${{env.REPO_NAME}}:test
+        docker build -t php  .
+        docker tag php ${{env.REPO_NAME}}
+        docker push ${{env.REPO_NAME}}
 
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
