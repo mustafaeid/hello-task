@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: helloworld
-          image: mustafaeid/test:latest
+          image: mustafaeid/test
           ports:
             - containerPort: 80
 
