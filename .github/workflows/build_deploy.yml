@@ -7,6 +7,7 @@ on:
 
 env:
   REPO_NAME: mustafaeid/test
+  VERSION : $GITHUB_RUN_NUMBER
 
 jobs:
 
@@ -40,7 +41,6 @@ jobs:
 
     - name: Build, tag, and push image to container registry
       run: |
-        source ./hello-task/env.vars
         docker build -t php  .
         docker tag php ${{env.REPO_NAME}}:${{env.VERSION}}
         docker push ${{env.REPO_NAME}}:${{env.VERSION}}
