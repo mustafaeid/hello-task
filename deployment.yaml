@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: helloworld
-          image: '${REPO_NAME}:"${VERSION}"'
+          image: '${REPO_NAME}:${VERSION}'
           ports:
             - containerPort: 80
 

@@ -57,6 +57,7 @@ jobs:
 
     - name: Deploy to kubernetes
       run: |
+        export VERSION="$GITHUB_RUN_NUMBER"
         envsubst < <(cat *.yaml) | kubectl apply -f -
 #        kubectl apply -f eks/deployment.yaml
 #        kubectl apply -f eks/service.yaml
