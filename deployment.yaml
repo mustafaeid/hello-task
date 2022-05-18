@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: helloworld
-          image: mustafaeid/test
+          image: mustafaeid/test:"${{env.VERSION}}"
           ports:
             - containerPort: 80
 

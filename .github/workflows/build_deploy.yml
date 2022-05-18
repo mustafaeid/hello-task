@@ -7,6 +7,7 @@ on:
 
 env:
   REPO_NAME: mustafaeid/test
+  VERSION: $GITHUB_RUN_NUMBER
 
 jobs:
 
@@ -41,8 +42,8 @@ jobs:
     - name: Build, tag, and push image to container registry
       run: |
         docker build -t php  .
-        docker tag php ${{env.REPO_NAME}}
-        docker push ${{env.REPO_NAME}}
+        docker tag php ${{env.REPO_NAME}}:${{env.VERSION}}
+        docker push ${{env.REPO_NAME}}:${{env.VERSION}}
 
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
@@ -56,7 +57,7 @@ jobs:
 
     - name: Deploy to kubernetes
       run: |
-        kubectl apply -f deployment.yaml
+       envsubst < kubectl apply -f deployment.yaml
 #        kubectl apply -f eks/deployment.yaml
 #        kubectl apply -f eks/service.yaml
 #        kubectl apply -f eks/issuer.yaml
