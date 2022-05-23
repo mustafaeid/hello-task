@@ -1,0 +1,4 @@
+resource_group_name  = "backend"
+storage_account_name = "tfstatebackend808asa"
+container_name       = "state"
+key                  = "staging.terraform.tfstate"

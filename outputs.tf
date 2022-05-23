@@ -1,7 +1,12 @@
-output "vault_conf" {
-  value = helm_release.vault.values
+output "resource_group_name" {
+  value = module.backend.resource_group_name
 }
 
-output "azurerm_key_vault_id" {
-  value = var.enable_key_vault ? azurerm_key_vault.vault_key[0].id : null
+output "storage_account_name" {
+  value = module.backend.storage_account_name
 }
+
+output "vault_id" {
+  value = module.backend.vault_id
+}
+

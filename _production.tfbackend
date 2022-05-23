@@ -1,0 +1,4 @@
+resource_group_name  = "backend"
+storage_account_name = "tfstatebackendb80bsa"
+container_name       = "state"
+key                  = "production.terraform.tfstate"
