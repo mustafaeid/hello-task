@@ -58,6 +58,6 @@ jobs:
     - name: Deploy to kubernetes
       run: |
         export VERSION="$GITHUB_RUN_NUMBER"
-        envsubst < <(cat *.yaml) | kubectl apply -f -
+        envsubst < <(cat deployment.yaml) | kubectl apply -f -
 
 
