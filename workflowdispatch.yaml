@@ -1,0 +1,110 @@
+name: production-deploy
+
+on:
+  workflow_dispatch:
+    branches:
+      - production
+    inputs:
+      version:
+        description: image-version
+      customer_name:
+        type: choice
+        description: Customers Names
+        options:
+          - nespresso
+          - zedelivery
+
+env:
+  PRODUCTION_RESOURCE_GROUP: '1m-rg-production'
+  PRODUCTION_REPO_NAME: 1mproduction
+  PROJECT_NAME: solaris
+
+jobs:
+  production-deploy:
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.SP_GITHUB_ACTIONS_ID_PROD}}
+      ARM_CLIENT_SECRET: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD_PROD}}
+      ARM_SUBSCRIPTION_ID: 97765f39-4303-4387-b9c6-56cd0c8e073f
+      ARM_TENANT_ID: c27cf48b-7f77-4fa4-9347-8266bc196b92
+
+    if: github.ref == 'refs/heads/production'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: sites/${{ env.PROJECT_NAME }}
+
+      - name: Checkout Devops Repo
+        uses: actions/checkout@v2
+        with:
+          repository: 1mrobotics/devops
+          path: devops
+          ref: master
+          token: ${{ secrets.GH_ACTION_PAT }}
+
+      - name: Variable setup
+        uses: ./sites/solaris/.github/actions/variable-setup
+
+      - name: Building production resources using Terraform
+        if: github.ref == 'refs/heads/production'
+        id: terraform-production
+        uses: ./devops/github/actions/terraform-ci
+        with:
+          ARM_CLIENT_ID: ${{ secrets.SP_GITHUB_ACTIONS_ID_PROD}}
+          ARM_CLIENT_SECRET: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD_PROD}}
+          ARM_SUBSCRIPTION_ID: 97765f39-4303-4387-b9c6-56cd0c8e073f
+          ARM_TENANT_ID: c27cf48b-7f77-4fa4-9347-8266bc196b92
+          CONTAINER_ID: pfeature887fc024e7b1e364
+          namespace: ${{ env.namespace}}
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.GH_SP_AZURE_CREDS_PROD }}
+
+      - name: Login to PROD ACR
+        uses: docker/login-action@v1
+        with:
+          registry: https://${{ env.PRODUCTION_REPO_NAME }}.azurecr.io/
+          username: ${{ secrets.SP_GITHUB_ACTIONS_ID_PROD }}
+          password: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD_PROD }}
+
+
+      - name: Setup kubeconfig
+        run: |
+          az aks get-credentials \
+          --name ${AKS_PRODUCTION_CLUSTER_NAME}  --resource-group ${PRODUCTION_RESOURCE_GROUP}
+
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: ${{ secrets.GH_SP_AZURE_CREDS_PROD }}
+          cluster-name: ${{ env.AKS_PRODUCTION_CLUSTER_NAME }}
+          resource-group: ${{ env.PRODUCTION_RESOURCE_GROUP }}
+
+      - name: Login to PROD ACR
+        uses: docker/login-action@v1
+        with:
+          registry: https://${{ env.PRODUCTION_REPO_NAME }}.azurecr.io/
+          username: ${{ secrets.SP_GITHUB_ACTIONS_ID_PROD }}
+          password: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD_PROD }}
+
+      - name: Deploy to Kubernetes cluster
+        run: |
+         export eventhubs_connection="${{ env.eventhubs_connection }}"
+         devops/build/deploy.sh production
+
+  slack-notifications:
+    runs-on: azure-self-hosted
+    needs: [build, test]
+    steps:
+      - name: Slack notifications
+        if: always()
+        uses: ravsamhq/notify-slack-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+          notification_title: 'job status'
+          message_format: 'Branch <{repo_url}/branches|{branch}> on commit <{commit_url}|{commit_sha}>'
+          footer: '<{run_url}|See Action Run> | <{repo_url}|Repo {repo}> | <{workflow_url}|{workflow} Workflow>'
+
