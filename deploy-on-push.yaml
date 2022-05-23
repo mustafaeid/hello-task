@@ -1,0 +1,149 @@
+name: Deploy on push
+on:
+  push:
+    branches:
+      - test
+      - nespresso
+      - production
+  workflow_dispatch:
+
+env:
+  STAGING_RESOURCE_GROUP: '1m-rg-staging'
+  STAGING_REPO_NAME: 1mstaging
+  PRODUCTION_REPO_NAME: 1mproduction
+  PRODUCTION_RESOURCE_GROUP: '1m-rg-production'
+  PROJECT_NAME: antares
+
+jobs:
+  build:
+    runs-on: azure-self-hosted
+    outputs:
+      eventhubs_connection: ${{ steps.build.outputs.eventhubs_connection }}
+    defaults:
+      run:
+        working-directory: ./
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: sites/${{ env.PROJECT_NAME }}
+
+      - name: Checkout Devops Repo
+        uses: actions/checkout@v2
+        with:
+          repository: 1mrobotics/devops
+          path: devops
+          ref: master
+          token: ${{ secrets.GH_ACTION_PAT }}
+
+      - name: Variable setup
+        uses: ./sites/antares/.github/actions/variable-setup
+
+      - name: Building resources using Terraform
+        if: github.ref != 'refs/heads/production'
+        id: terraform
+        uses: ./devops/github/actions/terraform-ci
+        with:
+          ARM_CLIENT_ID: ${{ secrets.SP_GITHUB_ACTIONS_ID}}
+          ARM_CLIENT_SECRET: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD}}
+          ARM_SUBSCRIPTION_ID: d2bfd9ff-2836-45b5-9d90-2ab7cbb08a72
+          ARM_TENANT_ID: c27cf48b-7f77-4fa4-9347-8266bc196b92
+          CONTAINER_ID: featured27f298bbc39041a
+          BRANCH: ${{ env.BRANCH}}
+
+      - name: Login to STG ACR
+        if: github.ref != 'refs/heads/production'
+        uses: docker/login-action@v1
+        with:
+          registry: https://${{ env.STAGING_REPO_NAME }}.azurecr.io/
+          username: ${{ secrets.SP_GITHUB_ACTIONS_ID }}
+          password: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD }}
+
+      - name: Login to PROD ACR
+        if: github.ref == 'refs/heads/production'
+        uses: docker/login-action@v1
+        with:
+          registry: https://${{ env.PRODUCTION_REPO_NAME }}.azurecr.io/
+          username: ${{ secrets.SP_GITHUB_ACTIONS_ID_PROD }}
+          password: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD_PROD }}
+
+      - name: Login to AWS ECR
+        uses: docker/login-action@v1
+        with:
+          registry: 046287820839.dkr.ecr.eu-central-1.amazonaws.com
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Debug view of environment variables
+        uses: hmarr/debug-action@v1.0.0
+
+      - id: build
+        if: github.ref != 'refs/heads/production'
+        name: Build and push docker images
+        run: |
+          echo "::set-output name=eventhubs_connection::${eventhubs_connection}"
+          devops/build/build.sh staging
+
+      - id: build-prod
+        if: github.ref == 'refs/heads/production'
+        name: Build and push docker images
+        run: devops/build/build.sh production
+
+  staging-deployment:
+    runs-on: azure-self-hosted
+    if: github.ref != 'refs/heads/production'
+    timeout-minutes: 4
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: sites/${{ env.PROJECT_NAME }}
+
+      - name: Checkout Devops Repo
+        uses: actions/checkout@v2
+        with:
+          repository: 1mrobotics/devops
+          path: devops
+          ref: master
+          token: ${{ secrets.GH_ACTION_PAT }}
+
+      - name: Variable setup
+        uses: ./sites/antares/.github/actions/variable-setup
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.GH_SP_AZURE_CREDS }}
+
+      - name: Setup kubeconfig
+        run: |
+          az aks get-credentials \
+          --name ${AKS_STAGING_CLUSTER_NAME}  \
+          --resource-group ${STAGING_RESOURCE_GROUP}
+
+      - uses: azure/aks-set-context@v1
+        with:
+          creds: ${{ secrets.GH_SP_AZURE_CREDS }}
+          cluster-name: ${{ env.AKS_STAGING_CLUSTER_NAME }}
+          resource-group: ${{ env.STAGING_RESOURCE_GROUP }}
+
+      - name: Login to STG ACR
+        if: github.ref != 'refs/heads/production'
+        uses: docker/login-action@v1
+        with:
+          registry: https://${{ env.STAGING_REPO_NAME }}.azurecr.io/
+          username: ${{ secrets.SP_GITHUB_ACTIONS_ID }}
+          password: ${{ secrets.SP_GITHUB_ACTIONS_PASSWORD }}
+
+      - name: Deploy to Kubernetes cluster
+        run: |
+          export eventhubs_connection="${{ needs.build.outputs.eventhubs_connection }}"
+          devops/build/deploy.sh staging
+
+  test:
+    runs-on: azure-self-hosted
+    needs: build
+    steps:
+      - run: |
+          echo Tests not yet implemented.
