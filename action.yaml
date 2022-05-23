@@ -1,0 +1,30 @@
+name: 'Variable setup'
+description: 'Sets up environment variables for workflows'
+# inputs:
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Calculated variables
+      shell: bash
+      run: |
+        (
+          REF="${REF:-${GITHUB_REF}}"
+          SHORT_SHA=${GITHUB_SHA::7}
+          BRANCH="${REF#refs/heads/}"
+          CI_BRANCH=${BRANCH}
+          BRANCH=${BRANCH,,}
+          BRANCH=${BRANCH////-}
+
+          echo "SHORT_SHA=${SHORT_SHA}"
+          echo "CI_BRANCH=${CI_BRANCH}"
+          echo "BRANCH=${BRANCH}"
+          echo "AKS_STAGING_CLUSTER_NAME=${AKS_STAGING_CLUSTER_NAME}"
+          echo "AKS_PRODUCTION_CLUSTER_NAME=${AKS_PRODUCTION_CLUSTER_NAME}"
+          echo "namespace=${{ github.event.inputs.customer_name }}"
+          echo "VERSION=${{ github.event.inputs.version }}"
+        ) >> $GITHUB_ENV
+
+      env:
+        AKS_STAGING_CLUSTER_NAME: 1m-staging
+        AKS_PRODUCTION_CLUSTER_NAME: 1m-prod
